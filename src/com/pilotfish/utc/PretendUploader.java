@@ -12,14 +12,21 @@ import java.util.Scanner;
 
 public class PretendUploader {
 
-    static String PILOTFISH_HTTP_SERVER = "http://localhost:8443";
-    static String SERVLET_CONTEXT = "";
-    static String LISTENER_CONTEXT = "http-post";
-    static String REQUEST_PATH = "testPost";
+    private static final String PILOTFISH_HTTP_SERVER = "http://localhost:9000";
+    private static String servletContext = "";
+    private static final String LISTENER_CONTEXT = "http-post";
+    private static final String REQUEST_PATH = "utc-audit";
 
-    static String OPCODE;
-    static String TEAM_LEADER_EMAIL;
-    static String FILENAME;
+    private static String opcode;
+    private static String teamLeaderEmail;
+    private static String fileName;
+
+    private static final int TEST_MODE = 1;
+    private static final int EMULATOR = 2;
+    private static final int EIP = 3;
+
+    private static final String EI_CONSOLE_CONTEXT = "eiConsole";
+    private static final String EIP_CONTEXT = "eip";
 
     static String PRETEND_UPLOAD_QUEUE =
             "<DATA>\n" +
@@ -37,19 +44,24 @@ public class PretendUploader {
                     "</PilotFish_Upload_Queue>\n" +
                     "</DATA>\n";
 
-    private static void send(PostMethod postMethod) {
+    private static String getRequestUrl(){
+        return String.format("%s/%s/%s/%s", PILOTFISH_HTTP_SERVER,servletContext,LISTENER_CONTEXT,REQUEST_PATH);
+    }
+
+    private static int send(PostMethod postMethod) {
         HttpClient httpClient = new HttpClient();
         try {
-            postMethod.setURI(new URI(String.format("%s/%s/%s/%s", PILOTFISH_HTTP_SERVER,SERVLET_CONTEXT,LISTENER_CONTEXT,REQUEST_PATH), true));
-            httpClient.executeMethod(postMethod);
+            postMethod.setURI(new URI(getRequestUrl(), true));
+            return httpClient.executeMethod(postMethod);
         } catch (IOException e) {
             e.printStackTrace();
+            return -1;
         }
     }
 
     private static void sendAsList() {
         PostMethod postMethod = new PostMethod();
-        postMethod.setRequestEntity(new StringRequestEntity(String.format(PRETEND_UPLOAD_QUEUE, TEAM_LEADER_EMAIL, FILENAME, OPCODE)));
+        postMethod.setRequestEntity(new StringRequestEntity(String.format(PRETEND_UPLOAD_QUEUE, teamLeaderEmail, fileName, opcode)));
         send(postMethod);
     }
 
@@ -66,11 +78,11 @@ public class PretendUploader {
         return f;
     }
 
-    private static void sendAsFile() {
+    private static int sendAsFile() {
         PostMethod postMethod = new PostMethod();
-        postMethod.addRequestHeader("team.leader.email", TEAM_LEADER_EMAIL);
-        postMethod.addRequestHeader("upload.file.name", FILENAME);
-        postMethod.addRequestHeader("opcode", OPCODE);
+        postMethod.addRequestHeader("team.leader.email", teamLeaderEmail);
+        postMethod.addRequestHeader("upload.file.name", fileName);
+        postMethod.addRequestHeader("opcode", opcode);
         postMethod.addRequestHeader("team.leader", "Bernie");
         postMethod.addRequestHeader("file.unique.key", "123");
         postMethod.addRequestHeader("upload.time", (new Date()).toString());
@@ -82,40 +94,49 @@ public class PretendUploader {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-        send(postMethod);
+        return send(postMethod);
     }
 
-    public static void main(String[] args) {
-        Scanner keysIn = new Scanner(System.in);
+    public static void main(String[] args) throws Exception{
+        Scanner in = new Scanner(System.in);
+
         System.out.println("Which environment?");
-        System.out.println("1. test mode");
-        System.out.println("2. emulator");
-        System.out.println("3. EIP");
-        String env = keysIn.nextLine();
-        if (env.equals("1")) {
-            SERVLET_CONTEXT = "eiConsole";
+        System.out.println("1. eiConsole test mode");
+        System.out.println("2. eiConsole emulator");
+        System.out.println("3. eiPlatform");
+        System.out.print("Choice: ");
+        int env = Integer.parseInt(in.nextLine());
+        switch(env){
+            case TEST_MODE:
+                servletContext = EI_CONSOLE_CONTEXT;
+                break;
+            case EMULATOR:
+            case EIP:
+                servletContext = EIP_CONTEXT;
+                break;
+            default:
+                throw new IllegalArgumentException("Illegal selection for environment: " + env);
         }
-        if (env.equals("2")) {
-            SERVLET_CONTEXT = "eip";
+
+        System.out.print("Enter a test opcode: ");
+        opcode = in.nextLine();
+        System.out.print("Enter a test email: ");
+        teamLeaderEmail = in.nextLine();
+        System.out.print("Enter a test filename: ");
+        fileName = in.nextLine();
+
+        System.out.println("\nPreparing Http Post");
+        System.out.println("Request URL: " + getRequestUrl());
+        System.out.println("OpCode: " + opcode);
+        System.out.println("Team Leader Email: " + teamLeaderEmail);
+        System.out.println("File Name: " + fileName);
+        System.out.print("\nPress 'enter' to continue");
+        in.nextLine();
+
+        System.out.println("\nSending Http Post");
+        int status = sendAsFile();
+        if(status >= 0){
+            System.out.println("Status Code: " + status);
         }
-        System.out.println("Which method to use?");
-        System.out.println("1. upload list item");
-        System.out.println("2. upload file");
-        String methodChoice = keysIn.nextLine();
-        System.out.println("Pretend to upload from remote server?");
-        REQUEST_PATH += keysIn.nextLine().matches("(?i)y.*") ? "Remote" : "";
-        System.out.println("Enter a test opcode:");
-        OPCODE = keysIn.nextLine();
-        System.out.println("Enter a test email:");
-        TEAM_LEADER_EMAIL = keysIn.nextLine();
-        System.out.println("Filename to pretend to upload:");
-        FILENAME = keysIn.nextLine();
-        if (methodChoice.equals("1")) {
-            sendAsList();
-        }
-        if (methodChoice.equals("2")) {
-            sendAsFile();
-        }
-        System.out.println("\nSent.  Hopefully.");
     }
 }

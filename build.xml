@@ -1,0 +1,20 @@
+<project>
+    <property name="projectDir" value="/Users/craigmiller/utc-post-test"/>
+    <property name="srcDir" value="${projectDir}/src"/>
+    <property name="buildDir" value="${projectDir}/build"/>
+    <property name="classesDir" value="${buildDir}/classes"/>
+    <property name="sourcesDir" value="${buildDir}/source"/>
+    <property name="srcLibDir" value="${projectDir}/lib"/>
+    <path id="jars">
+        <fileset dir="${srcLibDir}" includes="**/*.jar"/>
+    </path>
+    <target name="clean">
+        <delete dir="${buildDir}"/>
+    </target>
+    <target name="compile" depends="clean">
+        <mkdir dir="${buildDir}"/>
+        <mkdir dir="${classesDir}"/>
+        <mkdir dir="${sourcesDir"/>
+        <javac srcdir="${srcDir}" destdir="${classesDir}" classpathref="jars"/>
+    </target>
+</project>

@@ -11,12 +11,13 @@ import java.util.Scanner;
 
 public class PretendUploader {
 
-    private static final String PILOTFISH_HTTP_HOST = "http://localhost";
+    private static final String HTTP_PREFIX = "http://";
     private static final String LISTENER_CONTEXT = "http-post";
     private static final String REQUEST_PATH = "utc-audit";
     private static final int DEFAULT_PORT = 9000;
     private static final int ALT_PORT = 8080;
     private static final int SSL_PORT = 8443;
+    private static final String LOCAL_HOST = "localhost";
 
     private static final int TEST_MODE_CHOICE = 1;
     private static final int EMULATOR_CHOICE = 2;
@@ -29,16 +30,25 @@ public class PretendUploader {
     private static final int ACTUAL_FILE_CHOICE = 1;
     private static final int DUMMY_FILE_CHOICE = 2;
 
+    private static final int DEFAULT_SETTING_CHOICE = 1;
+    private static final int CUSTOM_SETTING_CHOICE = 2;
+
+    private static final int LOCAL_HOST_CHOICE = 1;
+    private static final int CUSTOM_HOST_CHOICE = 2;
+
     private static final String EI_CONSOLE_CONTEXT = "eiConsole";
     private static final String EIP_CONTEXT = "eip";
 
+    private String hostname = LOCAL_HOST;
     private String servletContext = "";
     private String opcode;
     private String teamLeaderEmail;
     private String fileName;
-    private int port = 9000;
-    private boolean useDummyFile;
+    private int port = DEFAULT_PORT;
+    private boolean useDummyFile = true;
     private File excelFile;
+    private String filePath;
+    private boolean useDefaultSettings = true;
 
     public static void main(String[] args) throws Exception{
         new PretendUploader().start();
@@ -67,7 +77,76 @@ public class PretendUploader {
                 throw new IllegalArgumentException("Illegal selection for environment: " + envChoice);
         }
 
-        System.out.println("\nWhat port is the PilotFish application running on?");
+        System.out.println("\nDefault Settings");
+        System.out.println("Hostname: " + LOCAL_HOST);
+        System.out.println("Port: " + DEFAULT_PORT);
+        System.out.println("File: (Dummy/Real): Dummy");
+        System.out.println("\nUse these settings?");
+        System.out.println("1. Use defaults");
+        System.out.println("2. Change defaults");
+        System.out.print("Choice: ");
+        int settingChoice = Integer.parseInt(in.nextLine());
+        switch(settingChoice){
+            case DEFAULT_SETTING_CHOICE:
+                useDefaultSettings = true;
+                break;
+            case CUSTOM_SETTING_CHOICE:
+                useDefaultSettings = false;
+                break;
+            default:
+                throw new IllegalArgumentException("Illegal selection for settings: " + envChoice);
+        }
+
+        if(!useDefaultSettings){
+            configureSettings(in);
+        }
+
+        if(useDummyFile){
+            System.out.print("Enter a dummy filename: ");
+            fileName = in.nextLine();
+        }
+
+        System.out.print("\nEnter a test opcode: ");
+        opcode = in.nextLine();
+        System.out.print("Enter a test email: ");
+        teamLeaderEmail = in.nextLine();
+
+        System.out.println("\nPreparing Http Post");
+        System.out.println("Request URL: " + getRequestUrl());
+        System.out.println("OpCode: " + opcode);
+        System.out.println("Team Leader Email: " + teamLeaderEmail);
+        System.out.println("File: " + (useDummyFile ? "Dummy" : "Real"));
+        System.out.println("File Path: " + (useDummyFile ? "N/A" : filePath));
+        System.out.println("File Name: " + fileName);
+        System.out.print("\nPress 'enter' to continue");
+        in.nextLine();
+
+        System.out.println("\nSending Http Post");
+        int status = sendAsFile();
+        if(status >= 0) {
+            System.out.println("Status Code: " + status);
+        }
+    }
+
+    private void configureSettings(Scanner in) throws Exception{
+        System.out.println("\nWhat is the hostname of the PilotFish applicaiton server?");
+        System.out.println("1. Localhost (default)");
+        System.out.println("2. Other (you will specify)");
+        System.out.print("Choice: ");
+        int hostChoice = Integer.parseInt(in.nextLine());
+        switch(hostChoice){
+            case LOCAL_HOST_CHOICE:
+                hostname = LOCAL_HOST;
+                break;
+            case CUSTOM_HOST_CHOICE:
+                System.out.print("Hostname: ");
+                hostname = in.nextLine();
+                break;
+            default:
+                throw new IllegalArgumentException("Illegal selection for host: " + hostChoice);
+        }
+
+        System.out.println("\nWhat is the port number of the PilotFish application server?");
         System.out.println("1. 9000 (default)");
         System.out.println("2. 8080");
         System.out.println("3. 8443");
@@ -109,30 +188,8 @@ public class PretendUploader {
             System.out.print("Path: ");
             String path = in.nextLine();
             excelFile = getFile(path);
+            filePath = excelFile.getAbsolutePath();
             fileName = excelFile.getName();
-        }
-        else{
-            System.out.print("Enter a dummy filename: ");
-            fileName = in.nextLine();
-        }
-
-        System.out.print("\nEnter a test opcode: ");
-        opcode = in.nextLine();
-        System.out.print("Enter a test email: ");
-        teamLeaderEmail = in.nextLine();
-
-        System.out.println("\nPreparing Http Post");
-        System.out.println("Request URL: " + getRequestUrl());
-        System.out.println("OpCode: " + opcode);
-        System.out.println("Team Leader Email: " + teamLeaderEmail);
-        System.out.println("File Name: " + fileName);
-        System.out.print("\nPress 'enter' to continue");
-        in.nextLine();
-
-        System.out.println("\nSending Http Post");
-        int status = sendAsFile();
-        if(status >= 0) {
-            System.out.println("Status Code: " + status);
         }
     }
 
@@ -149,7 +206,7 @@ public class PretendUploader {
     }
 
     private String getRequestUrl(){
-        return String.format("%s:%d/%s/%s/%s", PILOTFISH_HTTP_HOST, port, servletContext, LISTENER_CONTEXT, REQUEST_PATH);
+        return String.format("%s%s:%d/%s/%s/%s", HTTP_PREFIX, hostname, port, servletContext, LISTENER_CONTEXT, REQUEST_PATH);
     }
 
     private int send(PostMethod postMethod) {
@@ -165,13 +222,24 @@ public class PretendUploader {
 
     private File getPretendExcelFile() {
         File f = null;
+        FileOutputStream out = null;
         try {
             f = File.createTempFile("test", "xls");
-            FileOutputStream outF = new FileOutputStream(f);
-            outF.write("CONTENT OF THE UPLOADED EXCEL FILE".getBytes());
-            outF.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            out = new FileOutputStream(f);
+            out.write("CONTENT OF THE UPLOADED EXCEL FILE".getBytes());
+        }
+        catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        finally{
+            if(out != null){
+                try{
+                    out.close();
+                }
+                catch(IOException ex){
+                    ex.printStackTrace();
+                }
+            }
         }
         return f;
     }

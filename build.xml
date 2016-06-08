@@ -1,20 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project>
-    <property name="projectDir" value="/Users/craigmiller/utc-post-test"/>
-    <property name="srcDir" value="${projectDir}/src"/>
-    <property name="buildDir" value="${projectDir}/build"/>
-    <property name="classesDir" value="${buildDir}/classes"/>
-    <property name="sourcesDir" value="${buildDir}/source"/>
-    <property name="srcLibDir" value="${projectDir}/lib"/>
+    <property name="dir.project" value="/Users/craigmiller/utc-post-test"/>
+    <property name="dir.src" value="${dir.project}/src"/>
+    <property name="dir.build" value="${dir.project}/build"/>
+    <property name="dir.build.classes" value="${dir.build}/classes"/>
+    <property name="dir.build.sources" value="${dir.build}/sources"/>
+    <property name="dir.lib" value="${dir.project}/lib"/>
+    <property name="user.name" value="Craig Miller"/>
     <path id="jars">
-        <fileset dir="${srcLibDir}" includes="**/*.jar"/>
+        <fileset dir="${dir.lib}" includes="**/*.jar"/>
     </path>
     <target name="clean">
-        <delete dir="${buildDir}"/>
+        <delete dir="${dir.build}"/>
     </target>
     <target name="compile" depends="clean">
-        <mkdir dir="${buildDir}"/>
-        <mkdir dir="${classesDir}"/>
-        <mkdir dir="${sourcesDir"/>
-        <javac srcdir="${srcDir}" destdir="${classesDir}" classpathref="jars"/>
+        <mkdir dir="${dir.build}"/>
+        <mkdir dir="${dir.build.classes}"/>
+        <mkdir dir="${dir.build.sources}"/>
+        <javac srcdir="${dir.src}" destdir="${dir.build.classes}" classpathref="jars"/>
+    </target>
+    <target name="jar" depends="compile">
+        <copy todir="${dir.build.sources}">
+            <fileset dir="${dir.src}"/>
+        </copy>
+        <jar destfile="${dir.build}/utc-post-test-1.0.jar" basedir="${dir.build.classes}">
+            <zipgroupfileset dir="${dir.lib}" includes="*.jar"/>
+            <zipfileset dir="${dir.build.sources}" prefix="sources"/>
+            <manifest>
+                <attribute name="Built-By" value="${userName}"/>
+                <attribute name="Main-Class" value="com.pilotfish.utc.PretendUploader"/>
+            </manifest>
+        </jar>
     </target>
 </project>

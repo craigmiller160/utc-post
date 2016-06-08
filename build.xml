@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
+    <property name="project.name" value="utc-audit2-test"/>
+    <property name="project.version" value="2.1"/>
     <property name="dir.project" value="/Users/craigmiller/utc-post-test"/>
     <property name="dir.src" value="${dir.project}/src"/>
     <property name="dir.build" value="${dir.project}/build"/>
@@ -23,7 +25,7 @@
         <copy todir="${dir.build.sources}">
             <fileset dir="${dir.src}"/>
         </copy>
-        <jar destfile="${dir.build}/utc-post-test-1.0.jar" basedir="${dir.build.classes}">
+        <jar destfile="${dir.build}/${project.name}-${project.version}.jar" basedir="${dir.build.classes}">
             <zipgroupfileset dir="${dir.lib}" includes="*.jar"/>
             <zipfileset dir="${dir.build.sources}" prefix="sources"/>
             <manifest>

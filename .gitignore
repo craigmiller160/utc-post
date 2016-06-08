@@ -5,3 +5,6 @@
 
 # ant build
 /build
+
+# Mac files
+.DS_Store

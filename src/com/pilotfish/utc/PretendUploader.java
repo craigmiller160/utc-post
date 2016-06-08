@@ -4,7 +4,6 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
 
 import java.io.*;
 import java.util.Date;
@@ -28,22 +27,6 @@ public class PretendUploader {
     private static final String EI_CONSOLE_CONTEXT = "eiConsole";
     private static final String EIP_CONTEXT = "eip";
 
-    static String PRETEND_UPLOAD_QUEUE =
-            "<DATA>\n" +
-                    "<PilotFish_Upload_Queue>\n" +
-                    "  <PILOTFISH_UPLOAD_QUEUE_ROW>\n" +
-                    "    \t<FILE_UNIQUE_KEY>0000000000</FILE_UNIQUE_KEY>\n" +
-                    "    \t<TEAM_LEADER>Bernie Pozzi</TEAM_LEADER>\n" +
-                    "    \t<TEAM_LEADER_EMAIL>%s</TEAM_LEADER_EMAIL>\n" +
-                    "    \t<UPLOAD_FILE_NAME>%s</UPLOAD_FILE_NAME>\n" +
-                    "    \t<UPLOAD_TIMESTAMP>1984-10-01 13:16:50</UPLOAD_TIMESTAMP>\n" +
-                    "    \t<OPCODE>%s</OPCODE>\n" +
-                    "    \t<SITEID>999999</SITEID>\n" +
-                    "    \t<EVENTINFOKEY>222222222222222222222</EVENTINFOKEY>\n" +
-                    "  </PILOTFISH_UPLOAD_QUEUE_ROW>\n" +
-                    "</PilotFish_Upload_Queue>\n" +
-                    "</DATA>\n";
-
     private static String getRequestUrl(){
         return String.format("%s/%s/%s/%s", PILOTFISH_HTTP_SERVER,servletContext,LISTENER_CONTEXT,REQUEST_PATH);
     }
@@ -57,12 +40,6 @@ public class PretendUploader {
             e.printStackTrace();
             return -1;
         }
-    }
-
-    private static void sendAsList() {
-        PostMethod postMethod = new PostMethod();
-        postMethod.setRequestEntity(new StringRequestEntity(String.format(PRETEND_UPLOAD_QUEUE, teamLeaderEmail, fileName, opcode)));
-        send(postMethod);
     }
 
     private static File getPretendExcelFile() {

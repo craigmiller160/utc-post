@@ -30,9 +30,6 @@ public class PretendUploader {
     private static final int ACTUAL_FILE_CHOICE = 1;
     private static final int DUMMY_FILE_CHOICE = 2;
 
-    private static final int DEFAULT_SETTING_CHOICE = 1;
-    private static final int CUSTOM_SETTING_CHOICE = 2;
-
     private static final int LOCAL_HOST_CHOICE = 1;
     private static final int CUSTOM_HOST_CHOICE = 2;
 
@@ -77,29 +74,7 @@ public class PretendUploader {
                 throw new IllegalArgumentException("Illegal selection for environment: " + envChoice);
         }
 
-        System.out.println("\nDefault Settings");
-        System.out.println("Hostname: " + LOCAL_HOST);
-        System.out.println("Port: " + DEFAULT_PORT);
-        System.out.println("File: (Dummy/Real): Dummy");
-        System.out.println("\nUse these settings?");
-        System.out.println("1. Use defaults");
-        System.out.println("2. Change defaults");
-        System.out.print("Choice: ");
-        int settingChoice = Integer.parseInt(in.nextLine());
-        switch(settingChoice){
-            case DEFAULT_SETTING_CHOICE:
-                useDefaultSettings = true;
-                break;
-            case CUSTOM_SETTING_CHOICE:
-                useDefaultSettings = false;
-                break;
-            default:
-                throw new IllegalArgumentException("Illegal selection for settings: " + envChoice);
-        }
-
-        if(!useDefaultSettings){
-            configureSettings(in);
-        }
+        configureSettings(in);
 
         if(useDummyFile){
             System.out.print("Enter a dummy filename: ");
@@ -129,7 +104,7 @@ public class PretendUploader {
     }
 
     private void configureSettings(Scanner in) throws Exception{
-        System.out.println("\nWhat is the hostname of the PilotFish applicaiton server?");
+        System.out.println("\nWhat is the hostname of the PilotFish application server?");
         System.out.println("1. Localhost (default)");
         System.out.println("2. Other (you will specify)");
         System.out.print("Choice: ");

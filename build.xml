@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
     <property name="project.name" value="utc-audit2-test"/>
-    <property name="project.version" value="2.2"/>
+    <property name="project.version" value="2.3"/>
     <property name="dir.project" value="/Users/craigmiller/utc-post-test"/>
     <property name="dir.src" value="${dir.project}/src"/>
     <property name="dir.build" value="${dir.project}/build"/>
